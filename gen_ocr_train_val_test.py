@@ -1,5 +1,6 @@
 # coding:utf8
 import os
+import csv
 import shutil
 import random
 import argparse
@@ -39,7 +40,7 @@ def splitTrainVal(root, absTrainRootPath, absValRootPath, absTestRootPath, train
         if flag == "det":
             imagePath = os.path.join(dataAbsPath, imageName)
         elif flag == "rec":
-            imagePath = os.path.join(dataAbsPath, "{}\\{}".format(args.recImageDirName, imageName))
+            imagePath = os.path.join(dataAbsPath, "{}/{}".format(args.recImageDirName, imageName))
 
         # 按预设的比例划分训练集、验证集、测试集
         trainValTestRatio = args.trainValTestRatio.split(":")
@@ -50,15 +51,27 @@ def splitTrainVal(root, absTrainRootPath, absValRootPath, absTestRootPath, train
         if curRatio < trainRatio:
             imageCopyPath = os.path.join(absTrainRootPath, imageName)
             shutil.copy(imagePath, imageCopyPath)
-            trainTxt.write("{}\t{}".format(imageCopyPath, imageLabel))
+            if flag=='rec':
+                newCopyPath = imageCopyPath.split('/')[-1]
+                trainTxt.writerow([newCopyPath, imageLabel.replace('\n', '')])
+            else:
+                trainTxt.write("{}\t{}".format(imageCopyPath, imageLabel))
         elif curRatio >= trainRatio and curRatio < valRatio:
             imageCopyPath = os.path.join(absValRootPath, imageName)
             shutil.copy(imagePath, imageCopyPath)
-            valTxt.write("{}\t{}".format(imageCopyPath, imageLabel))
+            if flag=='rec':
+                newCopyPath = imageCopyPath.split('/')[-1]
+                valTxt.writerow([newCopyPath, imageLabel.replace('\n', '')])
+            else:
+                valTxt.write("{}\t{}".format(imageCopyPath, imageLabel))
         else:
             imageCopyPath = os.path.join(absTestRootPath, imageName)
             shutil.copy(imagePath, imageCopyPath)
-            testTxt.write("{}\t{}".format(imageCopyPath, imageLabel))
+            if flag=='rec':
+                newCopyPath = imageCopyPath.split('/')[-1]
+                testTxt.writerow([newCopyPath, imageLabel.replace('\n', '')])
+            else:
+                testTxt.write("{}\t{}".format(imageCopyPath, imageLabel))
 
 
 # 删掉存在的文件
@@ -78,16 +91,27 @@ def genDetRecTrainVal(args):
     removeFile(os.path.join(args.detRootPath, "train.txt"))
     removeFile(os.path.join(args.detRootPath, "val.txt"))
     removeFile(os.path.join(args.detRootPath, "test.txt"))
-    removeFile(os.path.join(args.recRootPath, "train.txt"))
-    removeFile(os.path.join(args.recRootPath, "val.txt"))
-    removeFile(os.path.join(args.recRootPath, "test.txt"))
+    removeFile(os.path.join(args.recRootPath, "train.csv"))
+    removeFile(os.path.join(args.recRootPath, "val.csv"))
+    removeFile(os.path.join(args.recRootPath, "test.csv"))
 
     detTrainTxt = open(os.path.join(args.detRootPath, "train.txt"), "a", encoding="UTF-8")
     detValTxt = open(os.path.join(args.detRootPath, "val.txt"), "a", encoding="UTF-8")
     detTestTxt = open(os.path.join(args.detRootPath, "test.txt"), "a", encoding="UTF-8")
-    recTrainTxt = open(os.path.join(args.recRootPath, "train.txt"), "a", encoding="UTF-8")
-    recValTxt = open(os.path.join(args.recRootPath, "val.txt"), "a", encoding="UTF-8")
-    recTestTxt = open(os.path.join(args.recRootPath, "test.txt"), "a", encoding="UTF-8")
+    recTrainCsv = open(os.path.join(args.recRootPath+'/train', "labels.csv"), "a", encoding="UTF-8", newline='')
+    recValCsv= open(os.path.join(args.recRootPath+'/val', "labels.csv"), "a", encoding="UTF-8", newline='')
+    recTestCsv = open(os.path.join(args.recRootPath+'/test', "labels.csv"), "a", encoding="UTF-8", newline='')
+
+
+    header = ['filename', 'words']
+    recTrainTxt = csv.writer(recTrainCsv)
+    recTrainTxt.writerow(header)
+
+    recValTxt = csv.writer(recValCsv)
+    recValTxt.writerow(header)
+
+    recTestTxt = csv.writer(recTestCsv)
+    recTestTxt.writerow(header)
 
     splitTrainVal(args.datasetRootPath, detAbsTrainRootPath, detAbsValRootPath, detAbsTestRootPath, detTrainTxt, detValTxt,
                   detTestTxt, "det")
@@ -104,30 +128,30 @@ def genDetRecTrainVal(args):
 
 
 if __name__ == "__main__":
-    # 功能描述：分别划分检测和识别的训练集、验证集、测试集
-    # 说明：可以根据自己的路径和需求调整参数，图像数据往往多人合作分批标注，每一批图像数据放在一个文件夹内用PPOCRLabel进行标注，
-    # 如此会有多个标注好的图像文件夹汇总并划分训练集、验证集、测试集的需求
+    # Function description: divide the training set, verification set and test set of detection and recognition respectively
+    # Description: You can adjust the parameters according to your own path and needs. Image data is often marked by multiple people in batches. Each batch of image data is placed in a folder and marked with EasyOCRLabel.
+    # In this way, there will be multiple labeled image folders to summarize and divide the training set, verification set, and test set requirements
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--trainValTestRatio",
         type=str,
-        default="6:2:2",
+        default="7:0:3",
         help="ratio of trainset:valset:testset")
     parser.add_argument(
         "--datasetRootPath",
         type=str,
-        default="../train_data/",
+        default="train_data/",
         help="path to the dataset marked by ppocrlabel, E.g, dataset folder named 1,2,3..."
     )
     parser.add_argument(
         "--detRootPath",
         type=str,
-        default="../train_data/det",
+        default="train_data/det",
         help="the path where the divided detection dataset is placed")
     parser.add_argument(
         "--recRootPath",
         type=str,
-        default="../train_data/rec",
+        default="train_data/rec",
         help="the path where the divided recognition dataset is placed"
     )
     parser.add_argument(

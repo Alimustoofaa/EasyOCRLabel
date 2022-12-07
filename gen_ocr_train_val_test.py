@@ -1,6 +1,7 @@
 # coding:utf8
 import os
 import csv
+import json
 import shutil
 import random
 import argparse
@@ -55,7 +56,17 @@ def splitTrainVal(root, absTrainRootPath, absValRootPath, absTestRootPath, train
                 newCopyPath = imageCopyPath.split('/')[-1]
                 trainTxt.writerow([newCopyPath, imageLabel.replace('\n', '')])
             else:
-                trainTxt.write("{}\t{}".format(imageCopyPath, imageLabel))
+                imageLabelList = json.loads(imageLabel)
+                detPath = os.path.join((absTrainRootPath+'_gt'), ('gt_'+imageName.replace('.jpg', '.txt')))
+                removeFile(detPath)
+                detTxt = open(detPath, "a", encoding="UTF-8")
+                for label in imageLabelList:
+                    point_list = sum(label['points'], [])
+                    before_idx = len(point_list)
+                    point_list.insert(before_idx, label['transcription'])
+                    txt = ",".join([str(i) for i in point_list])
+                    detTxt.write(txt)
+                    detTxt.write('\n')
         elif curRatio >= trainRatio and curRatio < valRatio:
             imageCopyPath = os.path.join(absValRootPath, imageName)
             shutil.copy(imagePath, imageCopyPath)
@@ -63,7 +74,17 @@ def splitTrainVal(root, absTrainRootPath, absValRootPath, absTestRootPath, train
                 newCopyPath = imageCopyPath.split('/')[-1]
                 valTxt.writerow([newCopyPath, imageLabel.replace('\n', '')])
             else:
-                valTxt.write("{}\t{}".format(imageCopyPath, imageLabel))
+                imageLabelList = json.loads(imageLabel)
+                detPath = os.path.join((absValRootPath+'_gt'), ('gt_'+imageName.replace('.jpg', '.txt')))
+                removeFile(detPath)
+                detTxt = open(detPath, "a", encoding="UTF-8")
+                for label in imageLabelList:
+                    point_list = sum(label['points'], [])
+                    before_idx = len(point_list)
+                    point_list.insert(before_idx, label['transcription'])
+                    txt = ",".join([str(i) for i in point_list])
+                    detTxt.write(txt)
+                    detTxt.write('\n')
         else:
             imageCopyPath = os.path.join(absTestRootPath, imageName)
             shutil.copy(imagePath, imageCopyPath)
@@ -71,7 +92,17 @@ def splitTrainVal(root, absTrainRootPath, absValRootPath, absTestRootPath, train
                 newCopyPath = imageCopyPath.split('/')[-1]
                 testTxt.writerow([newCopyPath, imageLabel.replace('\n', '')])
             else:
-                testTxt.write("{}\t{}".format(imageCopyPath, imageLabel))
+                imageLabelList = json.loads(imageLabel)
+                detPath = os.path.join((absTestRootPath+'_gt'), ('gt_'+imageName.replace('.jpg', '.txt')))
+                removeFile(detPath)
+                detTxt = open(detPath, "a", encoding="UTF-8")
+                for label in imageLabelList:
+                    point_list = sum(label['points'], [])
+                    before_idx = len(point_list)
+                    point_list.insert(before_idx, label['transcription'])
+                    txt = ",".join([str(i) for i in point_list])
+                    detTxt.write(txt)
+                    detTxt.write('\n')
 
 
 # 删掉存在的文件
@@ -82,22 +113,19 @@ def removeFile(path):
 
 def genDetRecTrainVal(args):
     detAbsTrainRootPath = isCreateOrDeleteFolder(args.detRootPath, "train")
+    detAbsTrainRootPathGt = isCreateOrDeleteFolder(args.detRootPath, "train_gt")
     detAbsValRootPath = isCreateOrDeleteFolder(args.detRootPath, "val")
+    detAbsValRootPathGt = isCreateOrDeleteFolder(args.detRootPath, "val_gt")
     detAbsTestRootPath = isCreateOrDeleteFolder(args.detRootPath, "test")
+    detAbsTestRootPathGt = isCreateOrDeleteFolder(args.detRootPath, "test_gt")
     recAbsTrainRootPath = isCreateOrDeleteFolder(args.recRootPath, "train")
     recAbsValRootPath = isCreateOrDeleteFolder(args.recRootPath, "val")
     recAbsTestRootPath = isCreateOrDeleteFolder(args.recRootPath, "test")
 
-    removeFile(os.path.join(args.detRootPath, "train.txt"))
-    removeFile(os.path.join(args.detRootPath, "val.txt"))
-    removeFile(os.path.join(args.detRootPath, "test.txt"))
     removeFile(os.path.join(args.recRootPath, "train.csv"))
     removeFile(os.path.join(args.recRootPath, "val.csv"))
     removeFile(os.path.join(args.recRootPath, "test.csv"))
 
-    detTrainTxt = open(os.path.join(args.detRootPath, "train.txt"), "a", encoding="UTF-8")
-    detValTxt = open(os.path.join(args.detRootPath, "val.txt"), "a", encoding="UTF-8")
-    detTestTxt = open(os.path.join(args.detRootPath, "test.txt"), "a", encoding="UTF-8")
     recTrainCsv = open(os.path.join(args.recRootPath+'/train', "labels.csv"), "a", encoding="UTF-8", newline='')
     recValCsv= open(os.path.join(args.recRootPath+'/val', "labels.csv"), "a", encoding="UTF-8", newline='')
     recTestCsv = open(os.path.join(args.recRootPath+'/test', "labels.csv"), "a", encoding="UTF-8", newline='')
@@ -113,8 +141,8 @@ def genDetRecTrainVal(args):
     recTestTxt = csv.writer(recTestCsv)
     recTestTxt.writerow(header)
 
-    splitTrainVal(args.datasetRootPath, detAbsTrainRootPath, detAbsValRootPath, detAbsTestRootPath, detTrainTxt, detValTxt,
-                  detTestTxt, "det")
+    splitTrainVal(args.datasetRootPath, detAbsTrainRootPath, detAbsValRootPath, detAbsTestRootPath, 'detTrainTxt', 'detValTxt',
+                  'detTestTxt', "det")
 
     for root, dirs, files in os.walk(args.datasetRootPath):
         for dir in dirs:

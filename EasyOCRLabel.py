@@ -2201,6 +2201,7 @@ class MainWindow(QMainWindow):
                     return
                 result_easyocr = self.ocr.readtext(img_crop)
                 result = self.extract_output(result_easyocr)
+                # print(result[0])
                 if not result: return
                 if result[0][0] != '':
                     if shape.line_color == DEFAULT_LOCK_COLOR:
@@ -2213,7 +2214,8 @@ class MainWindow(QMainWindow):
                         result.insert(0, box)
                         if self.kie_mode:
                             result.append(kie_cls)
-                        self.result_dic.append(result)
+                        print(result)
+                        self.result_dic.append([result[0], result[1][1]])
                 else:
                     print('Can not recognise the box')
                     if shape.line_color == DEFAULT_LOCK_COLOR:
@@ -2275,6 +2277,7 @@ class MainWindow(QMainWindow):
             result = self.extract_output(result_easyocr)
             if not result:
                 result.insert(0, box)
+                print(result)
                 print('result in reRec is ', result)
                 if result[1][1][0] == shape.label:
                     print('label no change')

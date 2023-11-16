@@ -1,3 +1,4 @@
+opencv-python-headless # installing the opencv-python-headless for xcd error in pyqt
 pyqt5
 easyocr
 xlrd==1.2.0

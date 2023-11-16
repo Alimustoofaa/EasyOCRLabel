@@ -4,9 +4,9 @@ EasyOCRLabel is a semi-automatic graphic annotation tool suitable for OCR field,
 
 |                 regular text annotation                 |                  table annotation                  |
 | :-----------------------------------------------------: | :------------------------------------------------: |
-|  `<img src="./data/gif/steps_en.gif" width="80%"/>`  | `<img src="./data/gif/table.gif" width="100%"/>` |
+|  <img src="./data/gif/steps_en.gif" width="80%"/>  | <img src="./data/gif/table.gif" width="100%"/> |
 |           **irregular text annotation**           |        **key information annotation**        |
-| `<img src="./data/gif/multi-point.gif" width="80%"/>` |  `<img src="./data/gif/kie.gif" width="300%"/>`  |
+| <img src="./data/gif/multi-point.gif" width="80%"/> |  <img src="./data/gif/kie.gif" width="300%"/>  |
 
 ## 1. Installation and Run
 
